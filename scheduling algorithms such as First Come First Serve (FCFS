@@ -1,0 +1,66 @@
+#include <iostream>
+#include <queue>
+#include <random>
+
+struct Process {
+    int processID;
+    int arrivalTime;
+    int burstTime;
+    int remainingTime;
+};
+
+void runRoundRobin(std::queue<Process>& processes, int timeQuantum) {
+    std::queue<Process> readyQueue;
+    int currentTime = 0;
+
+    while (!processes.empty() || !readyQueue.empty()) {
+        if (!processes.empty() && processes.front().arrivalTime <= currentTime) {
+            readyQueue.push(processes.front());
+            processes.pop();
+        }
+
+        if (!readyQueue.empty()) {
+            Process currentProcess = readyQueue.front();
+            readyQueue.pop();
+
+            int executionTime = std::min(timeQuantum, currentProcess.remainingTime);
+            currentProcess.remainingTime -= executionTime;
+            currentTime += executionTime;
+
+            if (currentProcess.remainingTime > 0) {
+                readyQueue.push(currentProcess);
+            } else {
+                // Process completed execution
+                std::cout << "Process " << currentProcess.processID << " completed execution." << std::endl;
+            }
+        } else {
+            currentTime++;
+        }
+    }
+}
+
+int main() {
+    std::queue<Process> processes;
+    const int numProcesses = 10;
+    const int timeQuantum = 5;
+
+    // Generate random arrival times and burst times for each process
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> arrivalTimeDistribution(0, 10);
+    std::uniform_int_distribution<int> burstTimeDistribution(1, 20);
+
+    for (int i = 0; i < numProcesses; i++) {
+        Process p;
+        p.processID = i;
+        p.arrivalTime = arrivalTimeDistribution(gen);
+        p.burstTime = burstTimeDistribution(gen);
+        p.remainingTime = p.burstTime;
+        processes.push(p);
+    }
+
+    // Run Round Robin scheduling algorithm
+    runRoundRobin(processes, timeQuantum);
+
+    return 0;
+}
